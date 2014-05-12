@@ -1,0 +1,38 @@
+// This is an example script to operate CC3000 BasicWiFi 
+// for basic UDP communication with a certain remote node
+
+// print status
+PRINT_STATUS
+
+// Connect with an Access Point with given SSID name
+CONNECT ASTDemoTP
+
+// small delay
+DELAY 1000
+
+// open UDP socket
+SOCK_OPEN
+
+// print status
+PRINT_STATUS
+
+// small delay
+DELAY 1000
+
+// send UDP data to remote node
+SEND 192.168.1.100 30000 MYDATA
+
+// small delay
+DELAY 1000
+
+// try to receive reply from the remote node
+RECEIVE
+
+// close socket
+SOCK_CLOSE
+
+// disconnect from Access Point
+DISCONNECT
+
+// print status
+PRINT_STATUS
