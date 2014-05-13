@@ -249,6 +249,7 @@ class BasicWiFiHost:
             pass
 
         if(cmd_string == "") or (cmd_string == BASIC_WIFI_SCRIPT_CMD_PRINT_STATUS):
+            print BASIC_WIFI_SCRIPT_CMD_PRINT_STATUS
             pass
 
     #---------------------------------------------------------------------------
@@ -691,7 +692,7 @@ class BasicWiFiHost:
             if(words[0] == BASIC_WIFI_SCRIPT_CMD_SMART_CFG):
                 if(len(words) != 1):
                     print BASIC_WIFI_SCRIPT_CMD_SMART_CFG, "doesn't accept any parameter"
-                    self.print_script_cmd_list
+                    self.print_script_cmd_list(BASIC_WIFI_SCRIPT_CMD_SMART_CFG)
                     sys.exit(1)
                 else:
                     try:
@@ -704,7 +705,7 @@ class BasicWiFiHost:
             elif(words[0] == BASIC_WIFI_SCRIPT_CMD_CONNECT):
                 if(len(words) != 2):
                     print BASIC_WIFI_SCRIPT_CMD_CONNECT, "only accept one parameter:"
-                    self.print_script_cmd_list
+                    self.print_script_cmd_list(BASIC_WIFI_SCRIPT_CMD_CONNECT)
                     sys.exit(1)
                 else:
                     try:
@@ -717,7 +718,7 @@ class BasicWiFiHost:
             elif(words[0] == BASIC_WIFI_SCRIPT_CMD_SOCK_OPEN):
                 if(len(words) != 1):
                     print BASIC_WIFI_SCRIPT_CMD_SOCK_OPEN, "doesn't accept any parameter"
-                    self.print_script_cmd_list
+                    self.print_script_cmd_list(BASIC_WIFI_SCRIPT_CMD_SOCK_OPEN)
                 else:
                     try:
                         # process input
@@ -729,7 +730,7 @@ class BasicWiFiHost:
             elif(words[0] == BASIC_WIFI_SCRIPT_CMD_SEND_DATA):
                 if(len(words) != 4):
                     print BASIC_WIFI_SCRIPT_CMD_SEND_DATA, "requires 3 parameters"
-                    self.print_script_cmd_list
+                    self.print_script_cmd_list(BASIC_WIFI_SCRIPT_CMD_SEND_DATA)
                 else:
                     try:
                         # process input
@@ -741,7 +742,7 @@ class BasicWiFiHost:
             elif(words[0] == BASIC_WIFI_SCRIPT_CMD_RCV_DATA):
                 if(len(words) != 1):
                     print BASIC_WIFI_SCRIPT_CMD_RCV_DATA, "doesn't accept any parameter"
-                    self.print_script_cmd_list
+                    self.print_script_cmd_list(BASIC_WIFI_SCRIPT_CMD_RCV_DATA)
                 else:
                     try:
                         # process input
@@ -753,7 +754,7 @@ class BasicWiFiHost:
             elif(words[0] == BASIC_WIFI_SCRIPT_CMD_BIND):
                 if(len(words) != 2):
                     print BASIC_WIFI_SCRIPT_CMD_BIND, "only accept one parameter:"
-                    self.print_script_cmd_list
+                    self.print_script_cmd_list(BASIC_WIFI_SCRIPT_CMD_BIND)
                     sys.exit(1)
                 else:
                     try:
@@ -766,7 +767,7 @@ class BasicWiFiHost:
             elif(words[0] == BASIC_WIFI_SCRIPT_CMD_SOCK_CLOSE):
                 if(len(words) != 1):
                     print BASIC_WIFI_SCRIPT_CMD_SOCK_CLOSE, "doesn't accept any parameter"
-                    self.print_script_cmd_list
+                    self.print_script_cmd_list(BASIC_WIFI_SCRIPT_CMD_SOCK_CLOSE)
                     sys.exit(1)
                 else:
                     try:
@@ -782,7 +783,7 @@ class BasicWiFiHost:
             elif(words[0] == BASIC_WIFI_SCRIPT_CMD_DISCONNECT):
                 if(len(words) != 1):
                     print BASIC_WIFI_SCRIPT_CMD_DISCONNECT, "doesn't accept any parameter"
-                    self.print_script_cmd_list
+                    self.print_script_cmd_list(BASIC_WIFI_SCRIPT_CMD_DISCONNECT)
                     sys.exit(1)
                 else:
                     try:
@@ -795,7 +796,7 @@ class BasicWiFiHost:
             elif(words[0] == BASIC_WIFI_SCRIPT_CMD_DEL_POLICY):
                 if(len(words) != 1):
                     print BASIC_WIFI_SCRIPT_CMD_DEL_POLICY, "doesn't accept any parameter"
-                    self.print_script_cmd_list
+                    self.print_script_cmd_list(BASIC_WIFI_SCRIPT_CMD_DEL_POLICY)
                     sys.exit(1)
                 else:
                     try:
@@ -808,7 +809,7 @@ class BasicWiFiHost:
             elif(words[0] == BASIC_WIFI_SCRIPT_CMD_MDNS_ADV):
                 if(len(words) != 1):
                     print BASIC_WIFI_SCRIPT_CMD_MDNS_ADV, "doesn't accept any parameter"
-                    self.print_script_cmd_list
+                    self.print_script_cmd_list(BASIC_WIFI_SCRIPT_CMD_MDNS_ADV)
                     sys.exit(1)
                 else:
                     try:
@@ -825,14 +826,14 @@ class BasicWiFiHost:
                     time.sleep(delay_time_ms)
                 except:
                     print BASIC_WIFI_SCRIPT_CMD_DELAY, "only accept one parameter:"
-                    self.print_script_cmd_list
+                    self.print_script_cmd_list(BASIC_WIFI_SCRIPT_CMD_DELAY)
                     sys.exit(1)
                 pass
 
             elif(words[0] == BASIC_WIFI_SCRIPT_CMD_PRINT_STATUS):
                 if(len(words) != 1):
                     print BASIC_WIFI_SCRIPT_CMD_PRINT_STATUS, "doesn't accept any parameter"
-                    self.print_script_cmd_list
+                    self.print_script_cmd_list("")
                     sys.exit(1)
                 else:
                     try:
@@ -884,6 +885,7 @@ if __name__ == '__main__':
 
     # instantiate BasicWiFiHost
     host = BasicWiFiHost(args.port)
+    host.print_script_cmd_list("")
 
     # open serial port
     try:
