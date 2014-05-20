@@ -885,7 +885,6 @@ if __name__ == '__main__':
 
     # instantiate BasicWiFiHost
     host = BasicWiFiHost(args.port)
-    host.print_script_cmd_list("")
 
     # open serial port
     try:
