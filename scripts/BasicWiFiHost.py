@@ -17,7 +17,7 @@
 # THIS SOFTWARE IS PROVIDED BY LEO HENDRAWAN ''AS IS'' AND ANY
 # EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 # WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-# DISCLAIMED. IN NO EVENT SHALL <COPYRIGHT HOLDER> BE LIABLE FOR ANY
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY
 # DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
 # (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
 # LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
@@ -36,6 +36,8 @@
 # Version:     0.1.0
 #
 # Note:        This module requires pyserial (http://pyserial.sourceforge.net/)
+#              Tested with MSP-EXP430G2 (MSP430G2553) + CC3000BOOST,
+#              driver version 2.13.7.15
 #
 # Log:
 #     - Version 0.1 (2014.04.09) :
@@ -72,7 +74,10 @@ BASIC_WIFI_CONSOLE_CMD_IP_CFG     = 0x08
 BASIC_WIFI_CONSOLE_CMD_DISCONNECT = 0x09
 BASIC_WIFI_CONSOLE_CMD_DEL_POLICY = 0x0A
 BASIC_WIFI_CONSOLE_CMD_MDNS_ADV   = 0x0B
+# custom commands
 EXIT_CMD = 0x00
+SHUTDOWN_CMD = 0x0C
+RESTART_CMD = 0x0D
 
 # console command list
 BASIC_WIFI_SCRIPT_CMD_SMART_CFG    = "SMART_CFG"
@@ -88,6 +93,8 @@ BASIC_WIFI_SCRIPT_CMD_DEL_POLICY   = "DEL_POLICY"
 BASIC_WIFI_SCRIPT_CMD_MDNS_ADV     = "MDNS_ADV"
 BASIC_WIFI_SCRIPT_CMD_PRINT_STATUS = "PRINT_STATUS"
 BASIC_WIFI_SCRIPT_CMD_DELAY        = "DELAY"
+BASIC_WIFI_SCRIPT_CMD_SHUT_DOWN    = "SHUT_DOWN"
+BASIC_WIFI_SCRIPT_CMD_RESTART      = "RESTART"
 
 
 #===============================================================================
@@ -196,6 +203,8 @@ class BasicWiFiHost:
         print "", BASIC_WIFI_CONSOLE_CMD_DISCONNECT, "- disconnect from AP"
         print "", BASIC_WIFI_CONSOLE_CMD_DEL_POLICY, "- delete policy"
         print "", BASIC_WIFI_CONSOLE_CMD_MDNS_ADV, "- send mDNS advertisement"
+        print "", SHUTDOWN_CMD, "- put CC3000 in shutdown mode"
+        print "", RESTART_CMD, "- restart CC3000"
         print "------------------------------------------------------------"
         print "\r\nEnter command:",
         pass
@@ -252,6 +261,14 @@ class BasicWiFiHost:
             print BASIC_WIFI_SCRIPT_CMD_PRINT_STATUS
             pass
 
+        if(cmd_string == "") or (cmd_string == BASIC_WIFI_SCRIPT_CMD_SHUT_DOWN):
+            print BASIC_WIFI_SCRIPT_CMD_SHUT_DOWN
+            pass
+
+        if(cmd_string == "") or (cmd_string == BASIC_WIFI_SCRIPT_CMD_RESTART):
+            print BASIC_WIFI_SCRIPT_CMD_RESTART
+            pass
+
     #---------------------------------------------------------------------------
     # wait for acknowledgement from CC3000 after sending command
     #---------------------------------------------------------------------------
@@ -286,6 +303,29 @@ class BasicWiFiHost:
         except:
             return ""
 
+
+    #---------------------------------------------------------------------------
+    # wait_for_ip
+    #---------------------------------------------------------------------------
+    def wait_for_ip(self):
+        # parser for local IP address information
+        line =""
+        while(line.find("IP:") == -1):
+            line = self.read_line_target()
+            self.print_line_target(line)
+        ip_addr_str = line.split(":")[1]
+        ip_addr_str = ip_addr_str.strip('\f')
+        ip_addr_str = ip_addr_str.strip('\r')
+        ip_addr_str = ip_addr_str.strip('\f')
+        # check if the IP address format is valid
+        if(self.ip_addr_str_to_hex_bytes(ip_addr_str) != ""):
+            # valid IP address format
+            self.local_ip_addr = ip_addr_str
+            print "Connected - local IP Addr:", self.local_ip_addr
+        else:
+            # invalid IP address format - should not happen actually
+            print "ERROR: invalid IP address:", ip_addr_str
+
     #---------------------------------------------------------------------------
     # run SmartConfig
     #---------------------------------------------------------------------------
@@ -301,6 +341,8 @@ class BasicWiFiHost:
 
         # wait for acknowledgement
         self.wait_ack()
+        self.wait_ack()
+        self.wait_for_ip()
 
         print "SmartConfig success\r\n"
 
@@ -324,24 +366,11 @@ class BasicWiFiHost:
             self.wait_ack()
 
             # parser for local IP address information
-            line =""
-            while(line.find("IP:") == -1):
-                line = self.read_line_target()
-                self.print_line_target(line)
-            ip_addr_str = line.split(":")[1]
-            ip_addr_str = ip_addr_str.strip('\f')
-            ip_addr_str = ip_addr_str.strip('\r')
-            ip_addr_str = ip_addr_str.strip('\f')
-            # check if the IP address format is valid
-            if(self.ip_addr_str_to_hex_bytes(ip_addr_str) != ""):
-                # valid IP address format
-                self.local_ip_addr = ip_addr_str
-                print "Connected - local IP Addr:", self.local_ip_addr
-                #set flag
-                self.ap_ssid = ssid
-            else:
-                # invalid IP address format - should not happen actually
-                print "ERROR: invalid IP address:", ip_addr_str
+            self.wait_for_ip()
+
+            #set flag
+            self.ap_ssid = ssid
+
         else:
             print "ERROR: invalid SSID:", ssid, ", max length SSID name is 15 bytes"
 
@@ -534,8 +563,8 @@ class BasicWiFiHost:
         print "\r\nDelete Policy"
 
         # construct command message
-        msg = "0A" + "\r"
-        print "[DBG] Deletec Policy MSG:", msg
+        msg = "0a" + "\r"
+        print "[DBG] Delete Policy MSG:", msg
 
         # send command message
         self.serial_port.write(msg)
@@ -554,7 +583,7 @@ class BasicWiFiHost:
         print "\r\nmDNS Advertisement"
 
         # construct command message
-        msg = "0B" + "\r"
+        msg = "0b" + "\r"
         print "[DBG] mDNS Advert MSG:", msg
 
         # send command message
@@ -568,6 +597,52 @@ class BasicWiFiHost:
         pass
 
     #---------------------------------------------------------------------------
+    # send shutdown command
+    #---------------------------------------------------------------------------
+    def shutdown(self):
+        print "\r\nShutdown"
+
+        # construct command message
+        msg = "0c" + "\r"
+        print "[DBG] Shutdown MSG:", msg
+
+        # send command message
+        self.serial_port.write(msg)
+
+        # wait for acknowledgement
+        self.wait_ack()
+
+        print "Sending shutdown command succeeds\r\n"
+
+        pass
+
+
+    #---------------------------------------------------------------------------
+    # send restart command
+    #---------------------------------------------------------------------------
+    def restart(self):
+        print "\r\nRestart"
+
+        # construct command message
+        msg = "0d" + "\r"
+        print "[DBG] Restart MSG:", msg
+
+        # send command message
+        self.serial_port.write(msg)
+
+        # wait for acknowledgement
+        #self.wait_ack()
+        line = ""
+        while(line.find("Example App") == -1):
+            line = host.read_line_target()
+            host.print_line_target(line)
+
+        print "Sending restart command succeeds\r\n"
+
+        pass
+
+
+    #---------------------------------------------------------------------------
     # run console
     #---------------------------------------------------------------------------
     def run_console(self):
@@ -579,7 +654,7 @@ class BasicWiFiHost:
 
             try:
                 # read command from user
-                cmd = int(raw_input()[0])
+                cmd = int(raw_input())
 
                 # process command
                 if(cmd == BASIC_WIFI_CONSOLE_CMD_SMART_CFG):
@@ -636,6 +711,12 @@ class BasicWiFiHost:
 
                 elif(cmd == BASIC_WIFI_CONSOLE_CMD_MDNS_ADV):
                     self.mdns_advert()
+
+                elif(cmd == SHUTDOWN_CMD):
+                    self.shutdown()
+
+                elif(cmd == RESTART_CMD):
+                    self.restart()
 
                 elif(cmd == EXIT_CMD):
                     print "\r\nExiting...\r\n"
@@ -841,6 +922,32 @@ class BasicWiFiHost:
                         self.print_status()
                     except:
                         print "ERROR: fail to execute", BASIC_WIFI_SCRIPT_CMD_PRINT_STATUS
+                pass
+
+            elif(words[0] == BASIC_WIFI_SCRIPT_CMD_SHUT_DOWN):
+                if(len(words) != 1):
+                    print BASIC_WIFI_SCRIPT_CMD_SHUT_DOWN, "doesn't accept any parameter"
+                    self.print_script_cmd_list("")
+                    sys.exit(1)
+                else:
+                    try:
+                        # process input
+                        self.shutdown()
+                    except:
+                        print "ERROR: fail to execute", BASIC_WIFI_SCRIPT_CMD_SHUT_DOWN
+                pass
+
+            elif(words[0] == BASIC_WIFI_SCRIPT_CMD_RESTART):
+                if(len(words) != 1):
+                    print BASIC_WIFI_SCRIPT_CMD_RESTART, "doesn't accept any parameter"
+                    self.print_script_cmd_list("")
+                    sys.exit(1)
+                else:
+                    try:
+                        # process input
+                        self.restart()
+                    except:
+                        print "ERROR: fail to execute", BASIC_WIFI_SCRIPT_CMD_RESTART
                 pass
 
             elif (words[0] != ''):

@@ -9,4 +9,4 @@ The script supports two mode operations:
 - scripter file operation with an input file
 
 For detailed description, please refer to:
-http://embedded-funk.blogspot.de/2014/05/cc3000-basic-wifi-host.html
+http://www.embedded-funk.net/wordpress/?p=70
